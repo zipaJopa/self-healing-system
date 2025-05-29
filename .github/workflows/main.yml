@@ -1,0 +1,36 @@
+name: Self-Healing-System Infrastructure
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'  # Every 2 hours
+  workflow_dispatch:
+
+jobs:
+  run-infrastructure:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install requests asyncio
+    
+    - name: Run Self-Healing-System Module
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PIONEX_API_KEY: ${{ secrets.PIONEX_API_KEY }}
+        PIONEX_API_SECRET: ${{ secrets.PIONEX_API_SECRET }}
+      run: python module.py
+    
+    - name: Commit Results
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "Infrastructure Module"
+        git add .
+        git diff --staged --quiet || git commit -m "🤖 Infrastructure: $(date)"
+        git push
